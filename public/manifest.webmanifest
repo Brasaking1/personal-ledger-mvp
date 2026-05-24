@@ -1,0 +1,11 @@
+{
+  "name": "我的账本",
+  "short_name": "账本",
+  "description": "个人云同步记账软件",
+  "theme_color": "#f7f3eb",
+  "background_color": "#f7f3eb",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "icons": []
+}
