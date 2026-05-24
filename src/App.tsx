@@ -9,6 +9,7 @@ import { TransactionForm } from './components/TransactionForm';
 import { createLedgerRepository, hasSupabaseConfig, supabaseClient } from './features/ledger/supabaseRepository';
 import { useLedger } from './features/ledger/useLedger';
 import { summarizeTransactions } from './features/ledger/calculations';
+import { currentMonthRange } from './features/ledger/date';
 import type { TransactionType } from './types/ledger';
 
 const viewTitle: Record<AppView, string> = {
@@ -71,10 +72,8 @@ function LedgerShell({ repository, userId }: { repository: ReturnType<typeof cre
   const [activeView, setActiveView] = useState<AppView>('home');
   const [entryType, setEntryType] = useState<TransactionType>('expense');
 
-  const today = new Date();
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
-  const monthEnd = today.toISOString().slice(0, 10);
-  const monthSummary = summarizeTransactions(ledger.transactions, monthStart, monthEnd);
+  const monthRange = currentMonthRange();
+  const monthSummary = summarizeTransactions(ledger.transactions, monthRange.start, monthRange.end);
 
   const openEntry = (type: TransactionType) => {
     setEntryType(type);

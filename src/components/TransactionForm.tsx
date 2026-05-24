@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
+import { toDateInputValue } from '../features/ledger/date';
 import type { NewTransactionInput } from '../features/ledger/repository';
 import type { Category, PaymentChannel, TransactionType } from '../types/ledger';
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => toDateInputValue(new Date());
 
 export function TransactionForm({
   categories,

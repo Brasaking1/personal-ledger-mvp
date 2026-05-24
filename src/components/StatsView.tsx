@@ -1,21 +1,16 @@
 import { useMemo, useState } from 'react';
 import { summarizeTransactions } from '../features/ledger/calculations';
+import { currentMonthRange } from '../features/ledger/date';
 import type { Category, Transaction } from '../types/ledger';
 
 const money = new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' });
-const isoDate = (date: Date) => date.toISOString().slice(0, 10);
-
-const monthStart = () => {
-  const date = new Date();
-  return isoDate(new Date(date.getFullYear(), date.getMonth(), 1));
-};
 
 const categoryName = (categories: Category[], categoryId: string) =>
   categories.find((category) => category.id === categoryId)?.name ?? categoryId;
 
 export function StatsView({ transactions, categories }: { transactions: Transaction[]; categories: Category[] }) {
-  const [startDate, setStartDate] = useState(monthStart());
-  const [endDate, setEndDate] = useState(isoDate(new Date()));
+  const [startDate, setStartDate] = useState(() => currentMonthRange().start);
+  const [endDate, setEndDate] = useState(() => currentMonthRange().end);
   const summary = useMemo(() => summarizeTransactions(transactions, startDate, endDate), [transactions, startDate, endDate]);
 
   return (
