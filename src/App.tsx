@@ -76,6 +76,11 @@ export function App() {
                 syncMode={ledger.syncMode}
                 onSavePrincipal={ledger.saveInitialPrincipal}
                 onSaveCategory={ledger.saveCategory}
+                onImportTransactions={async (transactions) => {
+                  for (const transaction of transactions) {
+                    await ledger.saveTransaction(transaction);
+                  }
+                }}
               />
             )}
           </>

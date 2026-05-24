@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { parseBillText, type ImportSource, type ParsedImportRow } from '../features/ledger/importers';
+import type { NewTransactionInput } from '../features/ledger/repository';
 import type { Category, LedgerSettings, TransactionType } from '../types/ledger';
 
 export function SettingsView({
@@ -6,21 +8,47 @@ export function SettingsView({
   categories,
   syncMode,
   onSavePrincipal,
-  onSaveCategory
+  onSaveCategory,
+  onImportTransactions
 }: {
   settings: LedgerSettings | null;
   categories: Category[];
   syncMode: 'local' | 'cloud';
   onSavePrincipal: (value: number) => void | Promise<void>;
   onSaveCategory: (category: Omit<Category, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => unknown | Promise<unknown>;
+  onImportTransactions: (transactions: NewTransactionInput[]) => void | Promise<void>;
 }) {
   const [principal, setPrincipal] = useState(String(settings?.initialPrincipal ?? 0));
   const [categoryName, setCategoryName] = useState('');
   const [categoryType, setCategoryType] = useState<TransactionType>('expense');
+  const [importSource, setImportSource] = useState<ImportSource>('wechat');
+  const [previewRows, setPreviewRows] = useState<ParsedImportRow[]>([]);
+  const [importMessage, setImportMessage] = useState('');
 
   const savePrincipal = async (event: React.FormEvent) => {
     event.preventDefault();
     await onSavePrincipal(Number(principal) || 0);
+  };
+
+  const parseFile = async (file: File) => {
+    let text: string;
+    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      const XLSX = await import('xlsx');
+      const workbook = XLSX.read(await file.arrayBuffer());
+      text = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]);
+    } else {
+      text = await file.text();
+    }
+    const rows = parseBillText(importSource, text);
+    setPreviewRows(rows);
+    setImportMessage(`已解析 ${rows.length} 条`);
+  };
+
+  const confirmImport = async () => {
+    const readyRows = previewRows.filter((row) => !row.needsReview);
+    await onImportTransactions(readyRows.map(({ raw: _raw, needsReview: _needsReview, ...transaction }) => transaction));
+    setImportMessage(`已导入 ${readyRows.length} 条`);
+    setPreviewRows([]);
   };
 
   const addCategory = async (event: React.FormEvent) => {
@@ -81,16 +109,40 @@ export function SettingsView({
         <div className="date-range">
           <label>
             <span>来源</span>
-            <select disabled>
-              <option>微信</option>
-              <option>支付宝</option>
+            <select value={importSource} onChange={(event) => setImportSource(event.target.value as ImportSource)}>
+              <option value="wechat">微信</option>
+              <option value="alipay">支付宝</option>
             </select>
           </label>
           <label>
             <span>文件</span>
-            <input type="file" disabled />
+            <input
+              type="file"
+              accept=".csv,.xlsx,.xls"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void parseFile(file);
+              }}
+            />
           </label>
         </div>
+        {importMessage && <p className="sync-line">{importMessage}</p>}
+        {previewRows.length > 0 && (
+          <>
+            <ul className="transaction-list import-preview">
+              {previewRows.slice(0, 8).map((row, index) => (
+                <li key={`${row.externalKey ?? index}`}>
+                  <div>
+                    <strong>{row.note || '未识别记录'}</strong>
+                    <span>{row.needsReview ? '需要检查' : row.type === 'income' ? '收入' : '支出'}</span>
+                  </div>
+                  <span className={row.type}>¥{row.amount.toFixed(2)}</span>
+                </li>
+              ))}
+            </ul>
+            <button className="submit-button" type="button" onClick={confirmImport}>确认导入</button>
+          </>
+        )}
       </section>
     </section>
   );
