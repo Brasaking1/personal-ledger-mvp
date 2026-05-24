@@ -32,12 +32,13 @@ export const defaultCategories: Category[] = [
   category('expense-medical', '医疗', 'expense', '#dc2626', 'heart-pulse', 7),
   category('expense-study', '学习', 'expense', '#ca8a04', 'book-open', 8),
   category('expense-travel', '旅行', 'expense', '#0f766e', 'plane', 9),
-  category('expense-other', '其他支出', 'expense', '#6b7280', 'circle-ellipsis', 10),
+  category('expense-investment-loss', '亏损', 'expense', '#991b1b', 'trending-down', 10),
+  category('expense-other', '其他支出', 'expense', '#6b7280', 'circle-ellipsis', 11),
   category('income-salary', '工资', 'income', '#059669', 'wallet', 1),
   category('income-bonus', '奖金', 'income', '#65a30d', 'gift', 2),
   category('income-parttime', '兼职', 'income', '#0d9488', 'briefcase', 3),
   category('income-refund', '退款', 'income', '#0284c7', 'rotate-ccw', 4),
   category('income-transfer', '转账', 'income', '#4f46e5', 'repeat', 5),
-  category('income-investment', '投资收益', 'income', '#9333ea', 'trending-up', 6),
+  category('income-investment', '理财收入', 'income', '#9333ea', 'trending-up', 6),
   category('income-other', '其他收入', 'income', '#6b7280', 'circle-ellipsis', 7)
 ];

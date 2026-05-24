@@ -61,6 +61,31 @@ export const cloneDefaultCategories = (userId: string) =>
     updatedAt: now()
   }));
 
+export const mergeDefaultCategories = (userId: string, categories: Category[]) => {
+  const existingById = new Map(categories.map((category) => [category.id, category]));
+  const defaultIds = new Set(defaultCategories.map((category) => category.id));
+  const stamp = now();
+  const systemCategories = defaultCategories.map((systemCategory) => {
+    const existing = existingById.get(systemCategory.id);
+    return {
+      ...systemCategory,
+      userId,
+      createdAt: existing?.createdAt ?? stamp,
+      updatedAt:
+        existing &&
+        existing.name === systemCategory.name &&
+        existing.type === systemCategory.type &&
+        existing.color === systemCategory.color &&
+        existing.icon === systemCategory.icon &&
+        existing.sortOrder === systemCategory.sortOrder
+          ? existing.updatedAt
+          : stamp
+    };
+  });
+  const customCategories = categories.filter((category) => !defaultIds.has(category.id));
+  return [...systemCategories, ...customCategories];
+};
+
 export class LocalLedgerRepository implements LedgerRepository {
   constructor(private readonly storageKey = 'personal-ledger') {}
 
@@ -157,6 +182,7 @@ export class LocalLedgerRepository implements LedgerRepository {
     const store = this.read();
     store.settingsByUser[userId] ??= createSettings(userId);
     store.categoriesByUser[userId] ??= cloneDefaultCategories(userId);
+    store.categoriesByUser[userId] = mergeDefaultCategories(userId, store.categoriesByUser[userId]);
     store.transactionsByUser[userId] ??= [];
     return store;
   }

@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import {
   cloneDefaultCategories,
   LocalLedgerRepository,
+  mergeDefaultCategories,
   type LedgerRepository,
   type LedgerSnapshot,
   type NewTransactionInput
@@ -37,7 +38,7 @@ export class SupabaseLedgerRepository implements LedgerRepository {
 
     const settings = settingsResult.data ? mapSettings(settingsResult.data) : await this.saveSettings(userId, 0);
     const categories = categoriesResult.data?.length
-      ? categoriesResult.data.map(mapCategory)
+      ? await this.syncDefaultCategories(userId, categoriesResult.data.map(mapCategory))
       : await this.seedDefaultCategories(userId);
 
     return {
@@ -112,22 +113,50 @@ export class SupabaseLedgerRepository implements LedgerRepository {
   }
 
   private async seedDefaultCategories(userId: string) {
-    const rows = cloneDefaultCategories(userId).map((category) => ({
-      id: category.id,
-      user_id: userId,
-      name: category.name,
-      type: category.type,
-      color: category.color,
-      icon: category.icon,
-      is_system: category.isSystem,
-      sort_order: category.sortOrder,
-      updated_at: category.updatedAt
-    }));
+    const rows = cloneDefaultCategories(userId).map(toCategoryRow);
     const { data, error } = await this.client.from('categories').upsert(rows, { onConflict: 'user_id,id' }).select('*');
     if (error) throw error;
     return (data ?? []).map(mapCategory);
   }
+
+  private async syncDefaultCategories(userId: string, categories: Category[]) {
+    const merged = mergeDefaultCategories(userId, categories);
+    const existingById = new Map(categories.map((category) => [category.id, category]));
+    const changedSystemCategories = merged.filter((category) => {
+      if (!category.isSystem) return false;
+      const existing = existingById.get(category.id);
+      return (
+        !existing ||
+        existing.name !== category.name ||
+        existing.type !== category.type ||
+        existing.color !== category.color ||
+        existing.icon !== category.icon ||
+        existing.sortOrder !== category.sortOrder
+      );
+    });
+
+    if (changedSystemCategories.length > 0) {
+      const { error } = await this.client
+        .from('categories')
+        .upsert(changedSystemCategories.map(toCategoryRow), { onConflict: 'user_id,id' });
+      if (error) throw error;
+    }
+
+    return merged;
+  }
 }
+
+const toCategoryRow = (category: Category) => ({
+  id: category.id,
+  user_id: category.userId,
+  name: category.name,
+  type: category.type,
+  color: category.color,
+  icon: category.icon,
+  is_system: category.isSystem,
+  sort_order: category.sortOrder,
+  updated_at: category.updatedAt
+});
 
 const mapSettings = (row: Record<string, unknown>): LedgerSettings => ({
   userId: String(row.user_id),

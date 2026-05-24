@@ -30,6 +30,20 @@ describe('parseBillText', () => {
     });
   });
 
+  it('categorizes investment income and investment losses', () => {
+    const incomeRows = parseBillText(
+      'alipay',
+      '交易时间,交易分类,交易对方,商品说明,收/支,金额,交易订单号\n2026-05-03 09:00:00,理财,基金账户,理财收益,收入,12.34,ali-invest-income'
+    );
+    const lossRows = parseBillText(
+      'alipay',
+      '交易时间,交易分类,交易对方,商品说明,收/支,金额,交易订单号\n2026-05-04 09:00:00,理财,基金账户,投资亏损,支出,56.78,ali-invest-loss'
+    );
+
+    expect(incomeRows[0].categoryId).toBe('income-investment');
+    expect(lossRows[0].categoryId).toBe('expense-investment-loss');
+  });
+
   it('skips WeChat export preamble and neutral rows', () => {
     const csv = [
       '微信支付账单明细,,,,,,,,,,',

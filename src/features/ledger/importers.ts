@@ -119,11 +119,13 @@ function guessIncomeCategory(row: Record<string, string>) {
   if (/奖金|奖/.test(text)) return 'income-bonus';
   if (/退款|退回/.test(text)) return 'income-refund';
   if (/转账|收款/.test(text)) return 'income-transfer';
+  if (/理财|基金|股票|收益|分红|利息/.test(text)) return 'income-investment';
   return 'income-other';
 }
 
 function guessExpenseCategory(row: Record<string, string>) {
   const text = Object.values(row).join(' ');
+  if (/亏损|理财亏|投资亏|基金亏|股票亏/.test(text)) return 'expense-investment-loss';
   if (/餐|饭|咖啡|奶茶|美团|饿了么|便利店|饮料|零食/.test(text)) return 'expense-food';
   if (/交通|地铁|公交|打车|滴滴|铁路|机票|哈啰|单车|骑行/.test(text)) return 'expense-transport';
   if (/房租|物业|水费|电费|燃气/.test(text)) return 'expense-housing';
