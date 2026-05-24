@@ -129,6 +129,14 @@ function LedgerShell({ repository, userId }: { repository: ReturnType<typeof cre
                     await ledger.saveTransaction(transaction);
                   }
                 }}
+                onReplaceTransactions={async (transactions) => {
+                  for (const transaction of ledger.transactions) {
+                    await ledger.deleteTransaction(transaction.id);
+                  }
+                  for (const transaction of transactions) {
+                    await ledger.saveTransaction(transaction);
+                  }
+                }}
               />
             )}
           </>

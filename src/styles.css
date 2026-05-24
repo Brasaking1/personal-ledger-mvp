@@ -318,14 +318,37 @@ label span {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
-  min-height: 44px;
   border: 1px solid #d9cdbc;
   border-radius: 8px;
-  padding: 0 12px;
   color: #171717;
   background: #fffdf8;
+}
+
+input,
+select {
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+textarea {
+  min-height: 128px;
+  resize: vertical;
+  padding: 12px;
+  line-height: 1.45;
+}
+
+.paste-area {
+  margin-top: 12px;
+}
+
+.submit-button.secondary {
+  width: 100%;
+  margin-top: 10px;
+  color: #153d33;
+  background: #dcefe6;
 }
 
 .settings-grid {

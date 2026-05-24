@@ -9,7 +9,8 @@ export function SettingsView({
   syncMode,
   onSavePrincipal,
   onSaveCategory,
-  onImportTransactions
+  onImportTransactions,
+  onReplaceTransactions
 }: {
   settings: LedgerSettings | null;
   categories: Category[];
@@ -17,11 +18,14 @@ export function SettingsView({
   onSavePrincipal: (value: number) => void | Promise<void>;
   onSaveCategory: (category: Omit<Category, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => unknown | Promise<unknown>;
   onImportTransactions: (transactions: NewTransactionInput[]) => void | Promise<void>;
+  onReplaceTransactions: (transactions: NewTransactionInput[]) => void | Promise<void>;
 }) {
   const [principal, setPrincipal] = useState(String(settings?.initialPrincipal ?? 0));
   const [categoryName, setCategoryName] = useState('');
   const [categoryType, setCategoryType] = useState<TransactionType>('expense');
   const [importSource, setImportSource] = useState<ImportSource>('wechat');
+  const [importMode, setImportMode] = useState<'append' | 'replace'>('append');
+  const [pastedBillText, setPastedBillText] = useState('');
   const [previewRows, setPreviewRows] = useState<ParsedImportRow[]>([]);
   const [importMessage, setImportMessage] = useState('');
 
@@ -32,23 +36,37 @@ export function SettingsView({
 
   const parseFile = async (file: File) => {
     let text: string;
-    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+    const fileName = file.name.toLowerCase();
+    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
       const XLSX = await import('xlsx');
       const workbook = XLSX.read(await file.arrayBuffer());
       text = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]);
     } else {
-      text = await file.text();
+      text = decodeTextFile(await file.arrayBuffer(), importSource);
     }
     const rows = parseBillText(importSource, text);
     setPreviewRows(rows);
     setImportMessage(`已解析 ${rows.length} 条`);
   };
 
+  const parsePastedText = () => {
+    const rows = parseBillText(importSource, pastedBillText);
+    setPreviewRows(rows);
+    setImportMessage(`已解析 ${rows.length} 条`);
+  };
+
   const confirmImport = async () => {
     const readyRows = previewRows.filter((row) => !row.needsReview);
-    await onImportTransactions(readyRows.map(({ raw: _raw, needsReview: _needsReview, ...transaction }) => transaction));
-    setImportMessage(`已导入 ${readyRows.length} 条`);
+    const transactions = readyRows.map(({ raw: _raw, needsReview: _needsReview, ...transaction }) => transaction);
+    if (importMode === 'replace') {
+      await onReplaceTransactions(transactions);
+    } else {
+      await onImportTransactions(transactions);
+    }
+    setImportMessage(importMode === 'replace' ? `已替换并导入 ${readyRows.length} 条` : `已导入 ${readyRows.length} 条`);
     setPreviewRows([]);
+    setPastedBillText('');
+    setImportMode('append');
   };
 
   const addCategory = async (event: React.FormEvent) => {
@@ -109,9 +127,23 @@ export function SettingsView({
         <div className="date-range">
           <label>
             <span>来源</span>
-            <select value={importSource} onChange={(event) => setImportSource(event.target.value as ImportSource)}>
+            <select
+              value={importSource}
+              onChange={(event) => {
+                setImportSource(event.target.value as ImportSource);
+                setPreviewRows([]);
+                setImportMessage('');
+              }}
+            >
               <option value="wechat">微信</option>
               <option value="alipay">支付宝</option>
+            </select>
+          </label>
+          <label>
+            <span>导入方式</span>
+            <select value={importMode} onChange={(event) => setImportMode(event.target.value as 'append' | 'replace')}>
+              <option value="append">追加记录</option>
+              <option value="replace">替换记录</option>
             </select>
           </label>
           <label>
@@ -126,6 +158,13 @@ export function SettingsView({
             />
           </label>
         </div>
+        <label className="paste-area">
+          <span>粘贴账单文本</span>
+          <textarea value={pastedBillText} onChange={(event) => setPastedBillText(event.target.value)} rows={6} />
+        </label>
+        <button className="submit-button secondary" type="button" onClick={parsePastedText} disabled={!pastedBillText.trim()}>
+          解析文本
+        </button>
         {importMessage && <p className="sync-line">{importMessage}</p>}
         {previewRows.length > 0 && (
           <>
@@ -146,4 +185,21 @@ export function SettingsView({
       </section>
     </section>
   );
+}
+
+function decodeTextFile(buffer: ArrayBuffer, source: ImportSource) {
+  const utf8 = new TextDecoder('utf-8').decode(buffer);
+  if (source !== 'alipay' && hasBillHeaders(utf8)) return utf8;
+  if (!utf8.includes('\uFFFD') && hasBillHeaders(utf8)) return utf8;
+
+  try {
+    const gb18030 = new TextDecoder('gb18030').decode(buffer);
+    return hasBillHeaders(gb18030) ? gb18030 : utf8;
+  } catch {
+    return utf8;
+  }
+}
+
+function hasBillHeaders(text: string) {
+  return /交易时间|交易创建时间/.test(text) && /收\/支/.test(text) && /金额/.test(text);
 }
