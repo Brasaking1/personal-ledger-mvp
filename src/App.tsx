@@ -9,7 +9,7 @@ import { TransactionForm } from './components/TransactionForm';
 import { createLedgerRepository, hasSupabaseConfig, supabaseClient } from './features/ledger/supabaseRepository';
 import { useLedger } from './features/ledger/useLedger';
 import { summarizeTransactions } from './features/ledger/calculations';
-import { currentMonthRange } from './features/ledger/date';
+import { currentDayRange, currentMonthRange, currentWeekRange } from './features/ledger/date';
 import type { TransactionType } from './types/ledger';
 
 const viewTitle: Record<AppView, string> = {
@@ -72,7 +72,11 @@ function LedgerShell({ repository, userId }: { repository: ReturnType<typeof cre
   const [activeView, setActiveView] = useState<AppView>('home');
   const [entryType, setEntryType] = useState<TransactionType>('expense');
 
+  const dayRange = currentDayRange();
+  const weekRange = currentWeekRange();
   const monthRange = currentMonthRange();
+  const daySummary = summarizeTransactions(ledger.transactions, dayRange.start, dayRange.end);
+  const weekSummary = summarizeTransactions(ledger.transactions, weekRange.start, weekRange.end);
   const monthSummary = summarizeTransactions(ledger.transactions, monthRange.start, monthRange.end);
 
   const openEntry = (type: TransactionType) => {
@@ -99,7 +103,9 @@ function LedgerShell({ repository, userId }: { repository: ReturnType<typeof cre
               <Dashboard
                 balance={ledger.currentBalance}
                 periodIncome={monthSummary.income}
-                periodExpense={monthSummary.expense}
+                dayExpense={daySummary.expense}
+                weekExpense={weekSummary.expense}
+                monthExpense={monthSummary.expense}
                 recentTransactions={ledger.transactions.slice(0, 6)}
                 categories={ledger.categories}
                 onAddIncome={() => openEntry('income')}

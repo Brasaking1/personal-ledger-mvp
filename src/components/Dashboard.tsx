@@ -9,7 +9,9 @@ const categoryName = (categories: Category[], categoryId: string) =>
 export function Dashboard({
   balance,
   periodIncome,
-  periodExpense,
+  dayExpense,
+  weekExpense,
+  monthExpense,
   recentTransactions,
   categories,
   onAddIncome,
@@ -17,7 +19,9 @@ export function Dashboard({
 }: {
   balance: number;
   periodIncome: number;
-  periodExpense: number;
+  dayExpense: number;
+  weekExpense: number;
+  monthExpense: number;
   recentTransactions: Transaction[];
   categories: Category[];
   onAddIncome: () => void;
@@ -43,13 +47,23 @@ export function Dashboard({
       <div className="metric-grid">
         <div className="metric-card">
           <ArrowUpCircle size={20} aria-hidden="true" />
-          <span>本期收入</span>
+          <span>本月收入</span>
           <strong>{money.format(periodIncome)}</strong>
         </div>
         <div className="metric-card">
           <ArrowDownCircle size={20} aria-hidden="true" />
-          <span>本期支出</span>
-          <strong>{money.format(periodExpense)}</strong>
+          <span>今日支出</span>
+          <strong>{money.format(dayExpense)}</strong>
+        </div>
+        <div className="metric-card">
+          <ArrowDownCircle size={20} aria-hidden="true" />
+          <span>本周支出</span>
+          <strong>{money.format(weekExpense)}</strong>
+        </div>
+        <div className="metric-card">
+          <ArrowDownCircle size={20} aria-hidden="true" />
+          <span>本月支出</span>
+          <strong>{money.format(monthExpense)}</strong>
         </div>
       </div>
 
