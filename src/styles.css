@@ -339,6 +339,52 @@ select {
   font-weight: 700;
 }
 
+.auth-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-card {
+  display: grid;
+  width: min(420px, 100%);
+  gap: 18px;
+  border: 1px solid #eadfce;
+  border-radius: 8px;
+  padding: 24px;
+  background: #fffdf8;
+}
+
+.auth-card h1 {
+  margin: 0;
+}
+
+.auth-strip {
+  position: fixed;
+  right: 14px;
+  bottom: 74px;
+  z-index: 11;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #d3e4f8;
+  border-radius: 999px;
+  padding: 6px 8px 6px 12px;
+  background: #f3f8ff;
+  color: #17416b;
+  font-size: 13px;
+}
+
+.auth-strip button {
+  min-height: 28px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 10px;
+  color: #17416b;
+  background: #d9ebff;
+}
+
 @media (min-width: 760px) {
   .app-layout {
     display: grid;
@@ -382,5 +428,11 @@ select {
   .settings-grid {
     grid-template-columns: minmax(260px, 0.9fr) minmax(360px, 1.3fr);
     align-items: start;
+  }
+
+  .auth-strip {
+    top: 18px;
+    right: 24px;
+    bottom: auto;
   }
 }

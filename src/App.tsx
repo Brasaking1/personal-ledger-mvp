@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { AuthGate } from './components/AuthGate';
 import { Dashboard } from './components/Dashboard';
 import { Navigation, type AppView } from './components/Navigation';
 import { SettingsView } from './components/SettingsView';
 import { StatsView } from './components/StatsView';
 import { TransactionForm } from './components/TransactionForm';
-import { createLedgerRepository } from './features/ledger/supabaseRepository';
+import { createLedgerRepository, hasSupabaseConfig, supabaseClient } from './features/ledger/supabaseRepository';
 import { useLedger } from './features/ledger/useLedger';
 import { summarizeTransactions } from './features/ledger/calculations';
 import type { TransactionType } from './types/ledger';
@@ -18,7 +20,54 @@ const viewTitle: Record<AppView, string> = {
 
 export function App() {
   const repository = useMemo(() => createLedgerRepository(), []);
-  const ledger = useLedger(repository, 'demo-user');
+  const [session, setSession] = useState<Session | null>(null);
+  const [authReady, setAuthReady] = useState(!hasSupabaseConfig);
+  const mode = hasSupabaseConfig ? 'cloud' : 'local';
+
+  useEffect(() => {
+    if (!supabaseClient) return;
+
+    let mounted = true;
+    supabaseClient.auth.getSession().then(({ data }) => {
+      if (mounted) {
+        setSession(data.session);
+        setAuthReady(true);
+      }
+    });
+    const { data } = supabaseClient.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setAuthReady(true);
+    });
+
+    return () => {
+      mounted = false;
+      data.subscription.unsubscribe();
+    };
+  }, []);
+
+  const login = async (email: string) => {
+    if (!supabaseClient) return;
+    const { error } = await supabaseClient.auth.signInWithOtp({ email });
+    if (error) throw error;
+  };
+
+  const logout = async () => {
+    await supabaseClient?.auth.signOut();
+  };
+
+  if (!authReady) {
+    return <main className="auth-page"><p className="muted">正在检查登录状态</p></main>;
+  }
+
+  return (
+    <AuthGate mode={mode} userEmail={session?.user.email ?? null} onLogin={login} onLogout={logout}>
+      <LedgerShell repository={repository} userId={session?.user.id ?? 'demo-user'} />
+    </AuthGate>
+  );
+}
+
+function LedgerShell({ repository, userId }: { repository: ReturnType<typeof createLedgerRepository>; userId: string }) {
+  const ledger = useLedger(repository, userId);
   const [activeView, setActiveView] = useState<AppView>('home');
   const [entryType, setEntryType] = useState<TransactionType>('expense');
 
