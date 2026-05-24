@@ -16,8 +16,19 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select {
+  cursor: default;
 }
 
 .app-layout {
@@ -105,6 +116,229 @@ select {
   background: #dcefe6;
 }
 
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.balance-panel {
+  display: grid;
+  gap: 18px;
+  min-height: 240px;
+  align-content: space-between;
+  border: 1px solid #eadfce;
+  border-radius: 8px;
+  padding: 24px;
+  color: #153d33;
+  background: linear-gradient(135deg, #fffaf2 0%, #e2f2ea 100%);
+}
+
+.balance-panel strong {
+  font-size: clamp(34px, 7vw, 64px);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.panel-label {
+  color: #526159;
+  font-size: 14px;
+}
+
+.quick-actions,
+.metric-grid,
+.date-range {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.primary-action,
+.submit-button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 16px;
+  color: #fff;
+  background: #1f4037;
+  font-weight: 700;
+}
+
+.primary-action.expense {
+  background: #b54708;
+}
+
+.primary-action.income {
+  background: #087443;
+}
+
+.metric-card,
+.section-block {
+  border: 1px solid #eadfce;
+  border-radius: 8px;
+  background: #fffdf8;
+}
+
+.metric-card {
+  display: grid;
+  min-height: 116px;
+  align-content: space-between;
+  gap: 8px;
+  padding: 16px;
+}
+
+.metric-card span,
+.transaction-list span,
+.summary-list span,
+.category-list small {
+  color: #6b6258;
+}
+
+.metric-card strong {
+  font-size: 24px;
+}
+
+.section-block {
+  padding: 18px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.empty-state {
+  margin: 0;
+  color: #8a8178;
+}
+
+.transaction-list,
+.summary-list,
+.category-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transaction-list li,
+.summary-list li,
+.category-list li {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #f0e7da;
+}
+
+.transaction-list li:last-child,
+.summary-list li:last-child,
+.category-list li:last-child {
+  border-bottom: 0;
+}
+
+.transaction-list li > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.transaction-list strong,
+.transaction-list span,
+.summary-list span,
+.category-list span {
+  overflow-wrap: anywhere;
+}
+
+.transaction-list .income {
+  color: #087443;
+  font-weight: 700;
+}
+
+.transaction-list .expense {
+  color: #b54708;
+  font-weight: 700;
+}
+
+.entry-form,
+.form-card {
+  display: grid;
+  gap: 14px;
+}
+
+.entry-form {
+  max-width: 560px;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  border-radius: 8px;
+  padding: 4px;
+  background: #eee4d6;
+}
+
+.segmented button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 6px;
+  color: #5c534b;
+  background: transparent;
+}
+
+.segmented button.active {
+  color: #173f35;
+  background: #fffdf8;
+  font-weight: 700;
+}
+
+label {
+  display: grid;
+  gap: 7px;
+}
+
+label span {
+  color: #5c534b;
+  font-size: 14px;
+}
+
+input,
+select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #d9cdbc;
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #171717;
+  background: #fffdf8;
+}
+
+.settings-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.sync-line {
+  margin: 0;
+  color: #17416b;
+  font-weight: 700;
+}
+
 @media (min-width: 760px) {
   .app-layout {
     display: grid;
@@ -133,5 +367,20 @@ select {
   .nav-item {
     justify-content: flex-start;
     padding: 0 14px;
+  }
+
+  .quick-actions,
+  .metric-grid,
+  .date-range {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-grid.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .settings-grid {
+    grid-template-columns: minmax(260px, 0.9fr) minmax(360px, 1.3fr);
+    align-items: start;
   }
 }
