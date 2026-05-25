@@ -1,6 +1,24 @@
 # Deployment
 
-This app can run as a hosted Vite site with Supabase cloud sync.
+This app runs on GitHub Pages with Supabase cloud sync.
+
+## GitHub Pages
+
+The repository includes `.github/workflows/deploy-pages.yml`. Every push to `main` builds the Vite app and deploys `dist` to GitHub Pages.
+
+Production URL:
+
+```text
+https://brasaking1.github.io/personal-ledger-mvp/
+```
+
+The workflow sets:
+
+```text
+VITE_BASE_PATH=/personal-ledger-mvp/
+```
+
+so built assets load correctly from the GitHub Pages project path.
 
 ## Supabase
 
@@ -8,25 +26,13 @@ This app can run as a hosted Vite site with Supabase cloud sync.
 2. Open `SQL Editor`.
 3. Run the contents of `supabase/schema.sql`.
 4. Copy the project URL and anon public key from `Project Settings -> API`.
-5. After the Vercel site is live, set `Authentication -> URL Configuration`:
-   - `Site URL`: the Vercel production URL
-   - `Redirect URLs`: the same URL with `/**`
-
-## Vercel
-
-Import the GitHub repository and use these settings:
-
-```text
-Framework Preset: Vite
-Build Command: npm run build
-Output Directory: dist
-```
-
-Set these environment variables in Vercel:
+5. Add these GitHub repository secrets:
 
 ```text
 VITE_SUPABASE_URL=your Supabase Project URL
 VITE_SUPABASE_ANON_KEY=your Supabase anon public key
 ```
 
-Redeploy after changing environment variables.
+6. In Supabase, set `Authentication -> URL Configuration`:
+   - `Site URL`: `https://brasaking1.github.io/personal-ledger-mvp/`
+   - `Redirect URLs`: `https://brasaking1.github.io/personal-ledger-mvp/**`
